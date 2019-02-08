@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>manga reader</title>
+    <script src="js/mithril.js"></script>
+    <link rel="shortcut icon" type="image/png" href="logo.png"/>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/jquery-ui.css">
+    <script src="js/jquery-3.3.1.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body class="container-fluid">
+
+    <div id="add-db" title="Add database...">
+        <p>You can add your own database hash here:</p>
+        <input type="text" name="hash" id="hash"><button type="submit" onclick="main($('#hash').text())">ok</button>
+    </div>
+
+    <nav role="navigation" class="row">
+            <div class="col-1"><a id="homepage" href="/"><img src="logo.png" id="logo"></img></a></div>
+            <div class="col" style="font-family: 'Montserrat', sans-serif; color: white;"><a id="open-db" style="cursor:pointer;">Add database</a></div>
+            <div class="col" style="font-family: 'Montserrat', sans-serif; color: white;">manga reader</div>
+    </nav>
+
+    <article>
+            <section id="app" class="col-10" style="margin: 0 auto;"></section>
+    </article>
+    <script>
+        function changeDatabase() {
+            console.log()
+        }
+        $(function() {
+            $('#add-db').dialog({
+                autoOpen:false,
+            });
+            $('#open-db').click(() => {
+                $('#add-db').dialog('open');
+            });
+        });
+        let path = window.location.pathname;
+        document.querySelector("#homepage").href = path;
+
+        function main(hash) {
+            let _hash = "https://cloudflare-ipfs.com/ipfs/" + hash;
+            fetch(_hash)
+                .then((res) => {return res.json()})
+                .then((json) => {
+                    let Home = {
+                        view: function() {
+                            document.querySelector("#app").innerHTML = "";
+                            for(let i = json.length-1; i >= 0 && i > json.length - 21; i--) {
+                                document.querySelector("#app").innerHTML += `<a href="${path}#!/g/${i+1}"><img src="https://cloudflare-ipfs.com/ipfs/${json[i].pages[0]}" width="250" height="358" /></a>`
+                            }
+                        }
+                    }
+
+                    let Gallery = {
+                        view: function(vnode) {
+                            document.querySelector("#app").innerHTML = "";
+                            let g_id = vnode.attrs.gallery_id;
+                            for(let i = 0; i < json[g_id].pages.length; i++) {
+                                document.querySelector("#app").innerHTML += `<a href="${path}#!/g/${g_id}/page/${i+1}"><img src="https://cloudflare-ipfs.com/ipfs/${json[g_id-1].pages[i]}" width="250" height="358" /></a>`
+                            }
+
+                        }
+                    }
+                    let Page = {
+                        view: function(vnode) {
+                            document.querySelector("#app").innerHTML = "";
+                            const g_id = vnode.attrs.gallery_id;
+                            const p_id = vnode.attrs.page_id;
+                            let next_page = parseInt(p_id) + 1;
+                            let previous_page = parseInt(p_id) - 1;
+                            if(previous_page < 1) previous_page = parseInt(json[g_id-1].pages.length) - 1;
+                            if(next_page > json[g_id-1].pages.length-1) next_page = 1
+                            document.querySelector("#app").innerHTML += 
+                            `<a href="${path}#!/g/${g_id}/page/${next_page}"><img src="https://cloudflare-ipfs.com/ipfs/${json[g_id-1].pages[p_id-1]}" width="100%" height="100%" /></a><br>` +
+                            `<span id="page_nav">` +
+                            `<a href="${path}#!/g/${g_id}/page/${previous_page}"><i style="font-size: 3em">&larr;</i></a>` +
+                            `<a href="${path}#!/g/${g_id}"><i style="font-size: 3em">&uarr;</i></a>` +
+                            `<a href="${path}#!/g/${g_id}/page/${next_page}"><i style="font-size: 3em">&rarr;</i></a>` +
+                            `</span>`
+                        }
+                    }
+
+                    m.route(document.querySelector("#app"), "/", {
+                        "/": Home,
+                        "/g/:gallery_id": Gallery,
+                        "/g/:gallery_id/page/:page_id": Page,
+                    })
+                    
+                    // for(let i = 0; i < json.length; i++) {
+                    //     for(let j = 0; j < json[i].pages.length; j++) {
+                    //         console.log(json[i].pages[j])
+                    //     }
+                    // }
+                });
+            }
+            main("QmUw3xviDCfsgXX7qdipSkpS5X8V5kfVzxTuAWQasoYYX7");
+      </script>
+</body>
+</html>
