@@ -63,9 +63,9 @@
                     let Gallery = {
                         view: function(vnode) {
                             document.querySelector("#app").innerHTML = "";
-                            let g_id = vnode.attrs.gallery_id;
+                            let g_id = parseInt(vnode.attrs.gallery_id) - 1;
                             for(let i = 0; i < json[g_id].pages.length; i++) {
-                                document.querySelector("#app").innerHTML += `<a href="${path}#!/g/${g_id}/page/${i+1}"><img src="https://cloudflare-ipfs.com/ipfs/${json[g_id-1].pages[i]}" width="250" height="358" /></a>`
+                                document.querySelector("#app").innerHTML += `<a href="${path}#!/g/${g_id}/page/${i+1}"><img src="https://cloudflare-ipfs.com/ipfs/${json[g_id].pages[i]}" width="250" height="358" /></a>`
                             }
 
                         }
