@@ -13,13 +13,19 @@
     <script src="js/popper.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/jquery-ui.min.js"></script>
+    <script src="js/routes.js"></script>
+    <script src="js/helpers.js"></script>
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body class="container-fluid">
 
     <div id="add-db" title="Add database...">
         <p>You can add your own database hash here:</p>
-        <input type="text" name="hash" id="hash"><button type="submit" onclick="main($('#hash').text())">ok</button>
+        <input type="text" name="hash" id="hash"><button type="submit" onclick="changeDatabase($('#hash').val())">ok</button><br>
+        <p>You can also select database here</p>
+        <select id="db_change" oninput="db_select_selector($('#db_change').val())">
+
+        </select>
     </div>
 
     <nav role="navigation" class="row">
@@ -32,77 +38,32 @@
             <section id="app" class="col-10" style="margin: 0 auto;"></section>
     </article>
     <script>
-        function changeDatabase() {
-            console.log()
-        }
+        db_selector_generate();
+        selectRow("SELECT hash FROM hashes WHERE defaultHash='1'", (res) => {
+            changeHash(res[0].name);
+            Home.view();
+        })
+        document.querySelector("#homepage").href = path+"#!/";
+        m.route(document.querySelector("#app"), "/", {
+            "/": Home,
+            "/g/:gallery_id": Gallery,
+            "/g/:gallery_id/page/:page_id": Page,
+        });
         $(function() {
             $('#add-db').dialog({
+                width: 600,
                 autoOpen:false,
             });
             $('#open-db').click(() => {
                 $('#add-db').dialog('open');
             });
+        });    
+        db.transaction((tx) => {
+            tx.executeSql("CREATE TABLE IF NOT EXISTS hashes (hash unique, defaultHash)");
+            tx.executeSql("INSERT INTO hashes(hash, defaultHash) VALUES ('QmNhHspzusAC4sXjjGx9BaNLVEhnsHMGLH6V7AzmRPYGZp', '0')")
+            tx.executeSql("INSERT INTO hashes(hash, defaultHash) VALUES ('QmUw3xviDCfsgXX7qdipSkpS5X8V5kfVzxTuAWQasoYYX7', '1')")
+            tx.executeSql("INSERT INTO hashes(hash, defaultHash) VALUES ('QmSk3xmLhu8aoYV1RDTi57EBSjaHDehtM7NDVj3aVpjV77', '0')")
         });
-        let path = window.location.pathname;
-        document.querySelector("#homepage").href = path;
-
-        function main(hash) {
-            let _hash = "https://cloudflare-ipfs.com/ipfs/" + hash;
-            fetch(_hash)
-                .then((res) => {return res.json()})
-                .then((json) => {
-                    let Home = {
-                        view: function() {
-                            document.querySelector("#app").innerHTML = "";
-                            for(let i = json.length-1; i >= 0 && i > json.length - 21; i--) {
-                                document.querySelector("#app").innerHTML += `<a href="${path}#!/g/${i+1}"><img src="https://cloudflare-ipfs.com/ipfs/${json[i].pages[0]}" width="250" height="358" /></a>`
-                            }
-                        }
-                    }
-
-                    let Gallery = {
-                        view: function(vnode) {
-                            document.querySelector("#app").innerHTML = "";
-                            let g_id = parseInt(vnode.attrs.gallery_id) - 1;
-                            for(let i = 0; i < json[g_id].pages.length; i++) {
-                                document.querySelector("#app").innerHTML += `<a href="${path}#!/g/${g_id}/page/${i+1}"><img src="https://cloudflare-ipfs.com/ipfs/${json[g_id].pages[i]}" width="250" height="358" /></a>`
-                            }
-
-                        }
-                    }
-                    let Page = {
-                        view: function(vnode) {
-                            document.querySelector("#app").innerHTML = "";
-                            const g_id = vnode.attrs.gallery_id;
-                            const p_id = vnode.attrs.page_id;
-                            let next_page = parseInt(p_id) + 1;
-                            let previous_page = parseInt(p_id) - 1;
-                            if(previous_page < 1) previous_page = parseInt(json[g_id-1].pages.length) - 1;
-                            if(next_page > json[g_id-1].pages.length-1) next_page = 1
-                            document.querySelector("#app").innerHTML += 
-                            `<a href="${path}#!/g/${g_id}/page/${next_page}"><img src="https://cloudflare-ipfs.com/ipfs/${json[g_id-1].pages[p_id-1]}" width="100%" height="100%" /></a><br>` +
-                            `<span id="page_nav">` +
-                            `<a href="${path}#!/g/${g_id}/page/${previous_page}"><i style="font-size: 3em">&larr;</i></a>` +
-                            `<a href="${path}#!/g/${g_id}"><i style="font-size: 3em">&uarr;</i></a>` +
-                            `<a href="${path}#!/g/${g_id}/page/${next_page}"><i style="font-size: 3em">&rarr;</i></a>` +
-                            `</span>`
-                        }
-                    }
-
-                    m.route(document.querySelector("#app"), "/", {
-                        "/": Home,
-                        "/g/:gallery_id": Gallery,
-                        "/g/:gallery_id/page/:page_id": Page,
-                    })
-                    
-                    // for(let i = 0; i < json.length; i++) {
-                    //     for(let j = 0; j < json[i].pages.length; j++) {
-                    //         console.log(json[i].pages[j])
-                    //     }
-                    // }
-                });
-            }
-            main("QmUw3xviDCfsgXX7qdipSkpS5X8V5kfVzxTuAWQasoYYX7");
       </script>
 </body>
 </html>
